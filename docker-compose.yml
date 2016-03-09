@@ -4,5 +4,5 @@ quake3:
     ports:
         - "${quake_port}:${quake_port}/udp"
     volumes:
-        - ${PWD}/pak0.pk3:/usr/share/games/quake3/baseq3/pak0.pk3
-        - ${PWD}/server.cfg:/usr/share/games/quake3/baseq3/server.cfg
+        - ${scriptdir}/pak0.pk3:/usr/share/games/quake3/baseq3/pak0.pk3
+        - ${scriptdir}/server.cfg:/usr/share/games/quake3/baseq3/server.cfg

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
 scriptdir="$(readlink -f "$(dirname "${0}")")"
+export scriptdir
 
 quake_port="${1}"
 export quake_port
+
 export COMPOSE_API_VERSION=1.18
 
 apt-get update
