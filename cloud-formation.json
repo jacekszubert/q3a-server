@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "AWS CloudFormation for Quake server deployment in Frankfurt.",
+  "Description" : "AWS CloudFormation for Quake3Arena server deployment.",
 
   "Parameters" : {
     "KeyName": {
@@ -225,19 +225,19 @@
 
   "Outputs" : {
     "InstanceId" : {
-      "Description" : "InstanceId of the newly created EC2 instance",
+      "Description" : "",
       "Value" : { "Ref" : "EC2Instance" }
     },
     "AZ" : {
-      "Description" : "Availability Zone of the newly created EC2 instance",
+      "Description" : "",
       "Value" : { "Fn::GetAtt" : [ "EC2Instance", "AvailabilityZone" ] }
     },
     "PublicDNS" : {
-      "Description" : "Public DNSName of the newly created EC2 instance",
+      "Description" : "",
       "Value" : { "Fn::GetAtt" : [ "EC2Instance", "PublicDnsName" ] }
     },
     "PublicIP" : {
-      "Description" : "Public IP address of the newly created EC2 instance",
+      "Description" : "",
       "Value" : { "Fn::GetAtt" : [ "EC2Instance", "PublicIp" ] }
     }
   }

@@ -2,6 +2,7 @@ FROM debian:jessie
 
 ## The Data from the official point release.
 ENV ioquake_data linuxq3apoint-1.32b-3.x86.run
+ENV username quake3
 
 RUN echo "deb http://httpredir.debian.org/debian jessie contrib" >> /etc/apt/sources.list && \
         apt-get update && \
@@ -25,9 +26,9 @@ RUN wget "http://youfailit.net/pub/idgames/idstuff/quake3/linux/${ioquake_data}"
         ./${ioquake_data} --tar xvf && \
         rm -rf ./${ioquake_data}
 
-RUN useradd quake3 -md /home/quake3
+RUN useradd "${username}" -md "/home/${username}"
 
-USER quake3
+USER "${username}"
 
 ENTRYPOINT ["/usr/games/quake3-server"]
 
