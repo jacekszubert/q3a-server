@@ -25,7 +25,9 @@ RUN wget "http://youfailit.net/pub/idgames/idstuff/quake3/linux/${ioquake_data}"
         ./${ioquake_data} --tar xvf && \
         rm -rf ./${ioquake_data}
 
-USER Docker-quake3
+RUN useradd quake3 -md /home/quake3
+
+USER quake3
 
 ENTRYPOINT ["/usr/games/quake3-server"]
 

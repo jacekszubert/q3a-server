@@ -197,15 +197,8 @@
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
              "#!/usr/bin/env bash\n",
-             "apt-get update\n",
-             "apt-get -y install docker.io git python-pip aria2\n",
-             "pip install docker-compose\n",
-             "export quake_port=", { "Ref" : "QuakePort" }, "\n",
-             "export COMPOSE_API_VERSION=1.18\n",
              "git clone ", { "Ref" : "GitRepo" }," q3a-server\n",
-             "cd q3a-server\n",
-             "aria2c -x 16 -s 16 http://game.pioneernet.ru/dl/q3/files/pk3/pak0.pk3\n",
-             "docker-compose up -d\n"
+             "./q3a-server/deploy-docker.sh ", { "Ref" : "QuakePort" }
         ]]}}
       }
     },
