@@ -1,8 +1,16 @@
-quake3:
+version: "2"
+
+services:
+  quake3:
     build: .
-    restart: always
+    command: build
     ports:
-        - "${quake_port}:${quake_port}/udp"
-    volumes:
-        - ${scriptdir}/pak0.pk3:/usr/share/games/quake3/baseq3/pak0.pk3
-        - ${scriptdir}/server.cfg:/usr/share/games/quake3/baseq3/server.cfg
+        - "27960:27960/udp"
+    deploy:
+      resources:
+        limits:
+          # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+          cpus: '0.25'
+          memory: '512m'
+
+x-aws-logs_retention: 1

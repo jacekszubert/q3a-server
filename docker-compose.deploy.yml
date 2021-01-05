@@ -1,0 +1,11 @@
+version: "2"
+
+services:
+  quake3:
+    image: "${DOCKER_IMAGE}"
+    build: .
+  healthcheck:
+    image: "${DOCKER_IMAGE}-healthcheck"
+    build:
+      context: .
+      dockerfile: Dockerfile.healthcheck

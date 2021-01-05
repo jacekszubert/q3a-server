@@ -1,35 +1,19 @@
-FROM debian:jessie
+FROM alpine as build
 
-## The Data from the official point release.
-ENV ioquake_data linuxq3apoint-1.32b-3.x86.run
-ENV username quake3
+RUN \
+    apk --no-cache add curl g++ gcc git make parallel &&\
+    curl -s https://raw.githubusercontent.com/ioquake/ioq3/master/misc/linux/server_compile.sh -o /tmp/compile.sh &&\
+    echo "y" | sh /tmp/compile.sh &&\
+    seq 0 8 |xargs -I{} -P10 -- curl -sL 'https://github.com/nrempel/q3-server/blob/master/baseq3/pak{}.pk3?raw=true' -o '/root/ioquake3/baseq3/pak{}.pk3'
 
-RUN echo "deb http://httpredir.debian.org/debian jessie contrib" >> /etc/apt/sources.list && \
-        apt-get update && \
-        apt-get install -y quake3-server \
-        wget && \
-        apt-get clean
 
-RUN rm -rf \
-        /var/lib/apt/lists/* \
-        /tmp/* \
-        /var/tmp/* \
-        /usr/share/locale/* \
-        /var/cache/debconf/*-old \
-        /var/lib/apt/lists/* \
-        /usr/share/doc/*
+FROM alpine:latest
 
-WORKDIR /usr/share/games/quake3
+COPY --from=build /root/ioquake3 /home/ioquake3/ioquake3
+RUN adduser ioquake3 -D
+COPY config/server.cfg /home/ioquake3/ioquake3/baseq3/server.cfg
+COPY bin/entrypoint.sh /entrypoint.sh
 
-RUN wget "http://youfailit.net/pub/idgames/idstuff/quake3/linux/${ioquake_data}" && \
-        chmod +x ${ioquake_data} && \
-        ./${ioquake_data} --tar xvf && \
-        rm -rf ./${ioquake_data}
-
-RUN useradd "${username}" -md "/home/${username}"
-
-USER "${username}"
-
-ENTRYPOINT ["/usr/games/quake3-server"]
-
-CMD ["+map", "q3dm17", "+exec", "server.cfg"]
+USER ioquake3
+EXPOSE 27960/udp
+ENTRYPOINT ["/entrypoint.sh"]

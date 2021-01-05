@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Initial cloudformation template
+
+Resources:
+  ECR:
+    Type: AWS::ECR::Repository
+
+Outputs:
+  ECRURI:
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECR}"

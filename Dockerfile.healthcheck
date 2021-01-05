@@ -1,0 +1,6 @@
+FROM alpine
+
+RUN apk add --update --no-cache nmap-ncat
+
+ENTRYPOINT ["ncat"]
+CMD ["--keep-open", "--listen", "-p", "3333"]
