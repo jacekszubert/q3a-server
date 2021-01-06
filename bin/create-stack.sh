@@ -7,16 +7,18 @@ dirname="$(basename "${scriptdir}")"
 
 stack_name="quake"
 
-#echo "Creating stack"
-#aws cloudformation create-stack \
-#    --stack-name "${stack_name}" \
-#    --template-body "file://${scriptdir}/../templates/cloudformation-init.yaml"
-#aws cloudformation wait stack-create-complete \
-#    --stack-name "${stack_name}"
+if ! aws cloudformation describe-stacks --stack-name "${stack_name}" >/dev/null 2>&1; then
+    echo "Creating stack"
+    aws cloudformation create-stack \
+        --stack-name "${stack_name}" \
+        --template-body "file://${scriptdir}/../templates/cloudformation-init.yaml"
+    aws cloudformation wait stack-create-complete \
+        --stack-name "${stack_name}"
+fi
 
 ret="$(aws cloudformation describe-stacks \
     --stack-name "${stack_name}")"
-repo_uri="$(echo "${ret}" |jq -r '.Stacks[0].Outputs[0].OutputValue')"
+repo_uri="$(echo "${ret}" |jq -r '.Stacks[0].Outputs[] |select(.OutputKey=="ECRURI").OutputValue')"
 export DOCKER_IMAGE="${repo_uri}:latest"
 echo "Building image"
 docker-compose -f docker-compose.yml -f docker-compose.deploy.yml build
