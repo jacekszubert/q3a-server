@@ -10,8 +10,8 @@ generate_config_files() {
 
     cat /dev/null > "${maps_file}"
     for map in $(shuf < "${maps_template_file}"); do
-	echo "set m${index} \"map ${map}; set nextmap vstr m$(("${index}" + 1))\"" >> "${maps_file}"
-	index=$(("${index}" + 1))
+	echo "set m${index} \"map ${map}; set nextmap vstr m$((${index} + 1))\"" >> "${maps_file}"
+	index=$((${index} + 1))
     done
     sed -i '$s/vstr.*$/vstr m1"/' "${maps_file}"
     echo "vstr m1" >> "${maps_file}"
