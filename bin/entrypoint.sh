@@ -9,9 +9,9 @@ generate_config_files() {
     maps_file=~/ioquake3/baseq3/maps.cfg
 
     cat /dev/null > "${maps_file}"
-    for map in $(cat "${maps_template_file}" |shuf); do
-        echo "set m${index} \"map ${map}; set nextmap vstr m$(expr "${index}" + 1)\"" >> "${maps_file}"
-        index=$(expr "${index}" + 1)
+    for map in $(shuf < "${maps_template_file}"); do
+	echo "set m${index} \"map ${map}; set nextmap vstr m$(("${index}" + 1))\"" >> "${maps_file}"
+	index=$(("${index}" + 1))
     done
     sed -i '$s/vstr.*$/vstr m1"/' "${maps_file}"
     echo "vstr m1" >> "${maps_file}"
@@ -29,4 +29,4 @@ exec ~/ioquake3/ioq3ded.x86_64 \
 	+set dedicated 2 \
 	+set net_port 27960 \
 	+map q3dm17 \
-	${config_params}
+	"${config_params}"

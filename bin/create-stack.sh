@@ -3,7 +3,6 @@
 set -e
 
 scriptdir="$(readlink -f "$(dirname "${0}")")"
-dirname="$(basename "${scriptdir}")"
 
 stack_name="quake"
 
