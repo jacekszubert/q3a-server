@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Initial cloudformation template
+Description: quake3 server -- initial stack
 
 Resources:
   ECR:

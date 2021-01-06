@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: An example CloudFormation template for Fargate.
+Description: quake3 server
 
 Parameters:
   Image:
@@ -19,6 +19,12 @@ Parameters:
   LoadBalancerPort:
     Type: Number
     Default: 27960
+  CreateLoadBalancer:
+    AllowedValues:
+      - false
+      - true
+    Type: String
+    Default: false
   DesiredTasks:
     Type: Number
     Default: 1
@@ -37,18 +43,18 @@ Parameters:
     Type: String
     Default: 10.192.11.0/24
 
+Conditions:
+  CreateLoadBalancerCondition:
+    !Equals [true, !Ref CreateLoadBalancer]
 
 Resources:
 
   Cluster:
     Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: !Join ['', [!Ref ServiceName, Cluster]]
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: LogGroup
     Properties:
-      Family: !Join ['', [!Ref ServiceName, TaskDefinition]]
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -91,7 +97,6 @@ Resources:
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Join ['', [!Ref ServiceName, ExecutionRole]]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -103,7 +108,6 @@ Resources:
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Join ['', [!Ref ServiceName, TaskRole]]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -113,12 +117,12 @@ Resources:
   ContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Join ['', [!Ref ServiceName, ContainerSecurityGroup]]
       VpcId: !Ref VPC
+      GroupDescription: !Join ['-', [!Ref 'AWS::StackName', ContainerSecurityGroup]]
       SecurityGroupIngress:
         - IpProtocol: udp
-          FromPort: !Ref LoadBalancerPort
-          ToPort: !Ref LoadBalancerPort
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: !Ref HealtcheckPort
@@ -126,18 +130,14 @@ Resources:
           CidrIp: !GetAtt VPC.CidrBlock
   Service:
     Type: AWS::ECS::Service
-    DependsOn:
-      - Listener
     Properties: 
-      ServiceName: !Ref ServiceName
       Cluster: !Ref Cluster
       TaskDefinition: !Ref TaskDefinition
       DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
+        MinimumHealthyPercent: 0
+        MaximumPercent: 100
       DesiredCount: !Ref DesiredTasks
-      HealthCheckGracePeriodSeconds: 30
-      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: !If [CreateLoadBalancerCondition, 30, !Ref 'AWS::NoValue']
       NetworkConfiguration: 
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -147,19 +147,23 @@ Resources:
           SecurityGroups:
             - !Ref ContainerSecurityGroup
       LoadBalancers:
-        - ContainerName: !Ref ServiceName
+        !If
+        - CreateLoadBalancerCondition
+        -
+          ContainerName: !Ref ServiceName
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref TargetGroup
+        - !Ref 'AWS::NoValue'
       CapacityProviderStrategy:
         - Weight: 1
           CapacityProvider: FARGATE_SPOT
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: CreateLoadBalancerCondition
     Properties:
       UnhealthyThresholdCount: 2
       HealthyThresholdCount: 2
       HealthCheckProtocol: TCP
-      Name: !Join ['', [!Ref ServiceName, TargetGroup]]
       Port: !Ref ContainerPort
       HealthCheckPort: !Ref HealtcheckPort
       Protocol: UDP
@@ -170,6 +174,7 @@ Resources:
       VpcId: !Ref VPC
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: CreateLoadBalancerCondition
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroup
@@ -179,8 +184,8 @@ Resources:
       Protocol: UDP
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: CreateLoadBalancerCondition
     Properties:
-      Name: !Join ['', [!Ref ServiceName, LoadBalancer]]
       Scheme: internet-facing
       Type: network
       Subnets:
@@ -189,7 +194,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join ['', [/ecs/, !Ref ServiceName, TaskDefinition]]
+      RetentionInDays: 1
 
   ECR:
     Type: AWS::ECR::Repository
@@ -203,13 +208,13 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref ServiceName
+          Value: !Ref 'AWS::StackName'
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref ServiceName
+          Value: !Ref 'AWS::StackName'
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -224,7 +229,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${ServiceName} Public Subnet (AZ1)
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ1)
   SubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -234,14 +239,14 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${ServiceName} Public Subnet (AZ2)
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ2)
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${ServiceName} Public Routes
+          Value: !Sub ${AWS::StackName} Public Routes
   DefaultPublicRoute:
     Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
@@ -263,3 +268,5 @@ Resources:
 Outputs:
   ECRURI:
     Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECR}"
+  ECRName:
+    Value: !Ref ECR
