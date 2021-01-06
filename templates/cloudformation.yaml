@@ -198,6 +198,23 @@ Resources:
 
   ECR:
     Type: AWS::ECR::Repository
+    Properties:
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "remove untagged images",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 1
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
 
   # Network
   VPC:
