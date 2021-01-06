@@ -9,9 +9,9 @@ RUN \
 
 FROM alpine:latest
 
-COPY --from=build /root/ioquake3 /home/ioquake3/ioquake3
 RUN adduser ioquake3 -D
-COPY config/server.cfg /home/ioquake3/ioquake3/baseq3/server.cfg
+COPY --from=build --chown=ioquake3 /root/ioquake3 /home/ioquake3/ioquake3
+COPY --chown=ioquake3 config/* /home/ioquake3/ioquake3/baseq3/
 COPY bin/entrypoint.sh /entrypoint.sh
 
 USER ioquake3
