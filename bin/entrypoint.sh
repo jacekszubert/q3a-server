@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -xe
+set -e
 
 generate_config_files() {
     echo "Randomizing maps"
@@ -22,6 +22,7 @@ generate_config_files
 config_params=""
 for file in ~/ioquake3/baseq3/*.cfg; do config_params="${config_params} +exec $(basename "${file}")"; done
 
+set -x
 exec ~/ioquake3/ioq3ded.x86_64 \
 	+set fs_game arena \
 	+set sv_pure 0 \
